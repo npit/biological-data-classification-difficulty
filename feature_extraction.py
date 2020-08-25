@@ -12,8 +12,6 @@ from statistics import *
 from scipy.stats import skew
 from scipy.stats import kurtosis
 from pandas import DataFrame
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
 
 
 from sklearn.feature_selection import mutual_info_classif
@@ -93,11 +91,11 @@ if __name__ == "__main__":
     google_drive_folder_with_representations_data = "Colab Notebooks/marina_biological_data"
     get_input_data_from_drive = False
     # for local runs use this
-    folder_with_representations_data = "Combined Representations"
+    folder_with_representations_data = "/home/npittaras/anna/representations"
     #############################
     # experiment parameters
     # #####################
-    only_run_reprs = ["Zcurve"] # repr. names here to limit run to these represenations
+    only_run_reprs = ["Voss"] # repr. names here to limit run to these represenations
     min_num_features = 100
     num_folds = 3
     instance_fractions = [0.5, 0.8, 1.0]
@@ -115,7 +113,10 @@ if __name__ == "__main__":
             drive.mount('/content/drive')
     else:
         run_data_folder = folder_with_representations_data
-        results_path = folder_with_representations_data + "/" + results_path_file 
+        results_path = folder_with_representations_data + "/" + results_path_file
+        if not os.path.exists(run_data_folder):
+            print("Can't find represenations folder:", run_data_folder)
+            exit()
 
     print("Will load data from:", run_data_folder)
     print("Will save results data to", results_path)
@@ -125,6 +126,11 @@ if __name__ == "__main__":
         results = pd.read_csv(results_path)
     else:
         results = pd.DataFrame(columns="exp_id representation filename inst_frac feat_frac classifier fold accuracy".split() + METAFEATURES_COLUMNS)
+        try:
+            results.to_csv(results_path)
+        except:
+            print("Can't make the results file path:", run_data_folder)
+            exit()
 
 
     if not only_run_reprs:

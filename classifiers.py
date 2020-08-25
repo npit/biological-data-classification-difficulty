@@ -7,6 +7,9 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.utils import to_categorical
 
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier
