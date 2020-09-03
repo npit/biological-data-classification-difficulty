@@ -1,8 +1,6 @@
 # imports
 import sys
 import pandas as pd
-import arff
-import pandas as pd
 import numpy as np
 import math
 import random
@@ -12,7 +10,8 @@ from statistics import *
 from scipy.stats import skew
 from scipy.stats import kurtosis
 from pandas import DataFrame
-
+import os
+from util import read_arff_data
 
 from sklearn.feature_selection import mutual_info_classif
 from info_gain import info_gain
@@ -24,6 +23,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.impute import KNNImputer
 
 from classifiers import *
+from argparse import ArgumentParser
 
 # NNs
 
@@ -38,26 +38,6 @@ def import_data_from_colab():
 
 
 METAFEATURES_COLUMNS = ['nr_instances', 'nr_features', 'nr_missing_values', 'mean_kurtosis', 'mean_skewness', 'mean', 'Info_gain', 'Inf_gain_ratio']
-def read_arff_data(filepath):
-    # with open (filepath) as f:
-    #     decoder=arff.ArffDecoder()
-    #     import ipdb; ipdb.set_trace()
-    #     datadictionary=decoder.decode(f,encode_nominal=True,return_type=arff.LOD)
-    #     data=datadictionary['data']
-    # import ipdb; ipdb.set_trace()
-
-    with open (filepath) as f:
-        data = arff.load(f)['data']
-    full_df = pd.DataFrame(data)
-
-    # encode nominal class
-    class_col = full_df.columns[-1]
-    for class_idx, class_name in enumerate(set(full_df[class_col])):
-        idx = full_df[full_df.columns[-1]] == class_name
-        full_df.loc[idx, class_col] = class_idx
-
-
-    return full_df
 
 def extract_metafeature(a):
     y=a[a.columns[-1]]
@@ -82,20 +62,26 @@ def random_gen():
     """generates random number"""
     return random.randint(0,1)
 
-if __name__ == "__main__":
+
+def main():
+
+    parser = ArgumentParser()
+    parser.add_argument("-rep_folder", help="Folder with representation folders.", default="representations")
+    parser.add_argument("-input_type", help="Specify input from google drive or locally.", choices=["drive", "local"], default="local")
+    parser.add_argument("-only_rep", help="Limit to only the specified representation.", default=False)
+ 
+    args = parser.parse_args()
+
     # data saveloading parameters
     #############################
-    # do not change this
-    base_google_drive_path =  "/content/drive/My Drive/"
     # change this with where Marina's data are (folders with arffs)
-    google_drive_folder_with_representations_data = "Colab Notebooks/marina_biological_data"
-    get_input_data_from_drive = False
-    # for local runs use this
-    folder_with_representations_data = "/home/npittaras/anna/representations"
+    get_input_data_from_drive = args.input_type == "drive"
+    folder_with_representations_data = os.path.join(os.getcwd(), args.rep_folder)
     #############################
+
     # experiment parameters
     # #####################
-    only_run_reprs = ["Voss"] # repr. names here to limit run to these represenations
+    only_run_reprs = args.only_rep  # repr. names here to limit run to these represenations
     min_num_features = 100
     num_folds = 3
     instance_fractions = [0.5, 0.8, 1.0]
@@ -106,14 +92,15 @@ if __name__ == "__main__":
 
     # input data
     if get_input_data_from_drive:
-        run_data_folder = base_google_drive_path + google_drive_folder_with_representations_data
-        results_path = base_google_drive_path + "/" + google_drive_folder_with_representations_data +  "/" + results_path_file 
+        base_google_drive_path =  "/content/drive/My Drive/"
+        run_data_folder = base_google_drive_path + folder_with_representations_data
+        results_path = base_google_drive_path + "/" + folder_with_representations_data +  "/" + results_path_file 
         if not os.path.exists(run_data_folder):
             from google.colab import drive
             drive.mount('/content/drive')
     else:
         run_data_folder = folder_with_representations_data
-        results_path = folder_with_representations_data + "/" + results_path_file
+        results_path = run_data_folder + "/" + results_path_file
         if not os.path.exists(run_data_folder):
             print("Can't find represenations folder:", run_data_folder)
             exit()
@@ -123,8 +110,10 @@ if __name__ == "__main__":
     print("Working in directory:", os.getcwd())
     # output data: make or load the results file
     if os.path.exists(results_path):
+        print("Continuing from existing results:", results_path)
         results = pd.read_csv(results_path)
     else:
+        print("Creating brand-new results:", results_path)
         results = pd.DataFrame(columns="exp_id representation filename inst_frac feat_frac classifier fold accuracy".split() + METAFEATURES_COLUMNS)
         try:
             results.to_csv(results_path)
@@ -151,7 +140,7 @@ if __name__ == "__main__":
     # for each representation
     for representation in representation_folders:
         representation_folder = os.path.join(run_data_folder, representation)
-        print("Representation",representation)
+        print("Starting representation: ",representation)
         # for each dataset
         for filename in os.listdir(representation_folder):
             # arff filepath
@@ -160,13 +149,13 @@ if __name__ == "__main__":
             full_features = list(full_df.columns)[:-1]
             label_column = full_df.columns[-1]
 
-            print("Running file ", filepath, "which has full data:", full_df.values.shape)
+            # print("Running file ", filepath, "which has full data:", full_df.values.shape)
 
             # for each fraction of instances
             for instance_frac in instance_fractions:
                 # select a different random percentage of instances 
                 instance_fractioned_df = frac(full_df, instance_frac)
-                print(f"Data fractioned by {instance_frac} instances:", instance_fractioned_df.values.shape)
+                # print(f"Data fractioned by {instance_frac} instances:", instance_fractioned_df.values.shape)
 
                 # for each fraction of features
                 for feature_frac in instance_fractions:
@@ -176,7 +165,9 @@ if __name__ == "__main__":
                     selected_features = features_subset + [label_column]
                     df = instance_fractioned_df.loc[:, selected_features]
                     config_counter += 1
-                    print(f"Configuration {config_counter} / {num_all_configurations} -- Feature fraction: {feature_frac} = {subset_size}, resulting in data matrix: {df.values.shape}")
+                    msg = f"{representation} {filename} fulldata: {full_df.values.shape} | {config_counter} / {num_all_configurations} "
+                    msg += f"-- ffrac: {feature_frac}, ifrac: {instance_frac} data shape: {df.values.shape}"
+                    print(msg)
 
                     # delete all-nan columns, replace partial nans with zero
                     df = df.dropna(1, how="all")
@@ -188,7 +179,7 @@ if __name__ == "__main__":
 
                     # average performance across all classifiers and folds
                     metafeat = extract_metafeature(df)
-                    gather_and_save_all_accuracies(df, (filename, representation, instance_frac, feature_frac), classifiers, num_folds, results, results_path, metafeat, METAFEATURES_COLUMNS)
+                    results = gather_and_save_all_accuracies(df, (filename, representation, instance_frac, feature_frac), classifiers, num_folds, results, results_path, metafeat, METAFEATURES_COLUMNS)
                     # dataset metafeatures for the current instance / features fraction 
                     del df
 
@@ -197,3 +188,6 @@ if __name__ == "__main__":
     #+1 decision tree-done
     #plires run -done
     #datasets me (2-100) classes
+
+if __name__ == "__main__":
+    main()

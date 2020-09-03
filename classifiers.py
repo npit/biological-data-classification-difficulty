@@ -35,10 +35,10 @@ def gather_and_save_all_accuracies(df, params, classifiers, num_folds, results, 
             current_id = f"{classifier_name}_fold{fold_index}_repr{representation}_ifrac{instance_frac}_ffrac{feature_frac}"
             if current_id in results["exp_id"].values.tolist():
                 print(f"Skipping experiment: {current_id} as it's already completed.")
-                accuracy = results[results["exp_id"]==current_id]["accuracy"]
+                # accuracy = results[results["exp_id"]==current_id]["accuracy"]
                 # all_accuracy_scores.append(accuracy)
                 continue
-            print(f"Running classifier {classifier_name} on fold {fold_index+1}/{num_folds} on {len(train_index)} train and {len(val_index)} val data")
+            # print(f"Running classifier {classifier_name} on fold {fold_index+1}/{num_folds} on {len(train_index)} train and {len(val_index)} val data")
             # get data and labels of the current fold
             train_data = df.values[train_index, :-1]
             train_labels = df.values[train_index,-1]
@@ -62,8 +62,8 @@ def gather_and_save_all_accuracies(df, params, classifiers, num_folds, results, 
             # all_accuracy_scores.append(accuracy)
         time_end = time.time()
         el = time_end - time_start
-        print(f"Elapsed {el/60} minutes / {el} sec")
-    return
+        print(f"{num_folds}-folds for {classifier_name} : elapsed {el/60} minutes / {el} sec")
+    return results
 
 
 
