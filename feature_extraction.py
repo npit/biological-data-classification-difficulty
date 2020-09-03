@@ -161,8 +161,6 @@ if __name__ == "__main__":
             label_column = full_df.columns[-1]
 
             print("Running file ", filepath, "which has full data:", full_df.values.shape)
-            # keep track of metafeatures and average accuracies
-            metafeatures, dataset_accuracies, full_paths = [], [], []
 
             # for each fraction of instances
             for instance_frac in instance_fractions:
@@ -190,11 +188,9 @@ if __name__ == "__main__":
 
                     # average performance across all classifiers and folds
                     metafeat = extract_metafeature(df)
-                    metafeatures.append(metafeat)
-                    accuracies = gather_and_save_all_accuracies(df, (filename, representation, instance_frac, feature_frac), classifiers, num_folds, results, results_path, metafeat, METAFEATURES_COLUMNS)
+                    gather_and_save_all_accuracies(df, (filename, representation, instance_frac, feature_frac), classifiers, num_folds, results, results_path, metafeat, METAFEATURES_COLUMNS)
                     # dataset metafeatures for the current instance / features fraction 
-                    dataset_accuracies.append(accuracies)
-                    full_paths.append(filepath)
+                    del df
 
     #ski-learn-imputation
     #+1 nn mikro 

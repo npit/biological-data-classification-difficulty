@@ -18,22 +18,25 @@ from sklearn import preprocessing
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score
 
+import time
 
 def gather_and_save_all_accuracies(df, params, classifiers, num_folds, results, results_path,
     metafeat, metafeatures_columns):
     filename ,representation, instance_frac, feature_frac = params
-    all_accuracy_scores = []
+    # all_accuracy_scores = []
     # get accuracy from a range of classifiers via cross-validation
     for classifier_name, classifier_func in classifiers.items():
         # generate train / validation indexes
         splitter = StratifiedKFold(n_splits=num_folds)
+
+        time_start = time.time()
         for fold_index, (train_index, val_index) in enumerate(splitter.split(df.values, df.values[:, -1])):
             # make an ID for recoverable progress
             current_id = f"{classifier_name}_fold{fold_index}_repr{representation}_ifrac{instance_frac}_ffrac{feature_frac}"
             if current_id in results["exp_id"].values.tolist():
                 print(f"Skipping experiment: {current_id} as it's already completed.")
                 accuracy = results[results["exp_id"]==current_id]["accuracy"]
-                all_accuracy_scores.append(accuracy)
+                # all_accuracy_scores.append(accuracy)
                 continue
             print(f"Running classifier {classifier_name} on fold {fold_index+1}/{num_folds} on {len(train_index)} train and {len(val_index)} val data")
             # get data and labels of the current fold
@@ -56,9 +59,11 @@ def gather_and_save_all_accuracies(df, params, classifiers, num_folds, results, 
             if os.path.exists(results_path):
                 copyfile(results_path, results_path + ".backup")
             results.to_csv(results_path, index=None)
-            all_accuracy_scores.append(accuracy)
-    # return sum(all_accuracy_scores) / len(all_accuracy_scores)
-    return all_accuracy_scores
+            # all_accuracy_scores.append(accuracy)
+        time_end = time.time()
+        el = time_end - time_start
+        print(f"Elapsed {el/60} minutes / {el} sec")
+    return
 
 
 
