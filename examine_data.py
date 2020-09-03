@@ -1,10 +1,11 @@
 from glob import glob
+import numpy as np
 import sys
 import os
 
 
 
-from feature_extraction import read_arff_data
+from util import read_arff_data
 
 def examine_path(arff_file):
     data = read_arff_data(arff_file)
@@ -22,6 +23,28 @@ def examine_path(arff_file):
         print("\t", last)
         passed = True
     return passed
+
+def summarize_path(arff_file):
+    data = read_arff_data(arff_file)
+    data.fillna(0.0)
+    return np.asarray(data.values.shape)
+
+
+def summarize_folder(representations_folder):
+    for folder in glob(representations_folder + "*/"):
+        print(folder)
+        szs = []
+        for path in glob(folder + "*"):
+            if os.path.isfile(path):
+                sz = summarize_path(path)
+            else:
+                summarize_folder(path)
+                continue
+            # print(arff_file, sz)
+            szs.append(sz)
+        stats = np.vstack(szs)
+        print("Mean lens / dims: ", np.mean(stats, axis=0))
+
 
 def examine_folder(representations_folder):
     problematic_folders = set()
@@ -45,6 +68,6 @@ def examine_folder(representations_folder):
 # path = "/home/nik/work/repr/anna/Combined Representations/Tetrahedron/Combined1.arff"
 inp = sys.argv[1]
 if os.path.isdir(inp):
-    examine_folder(inp)
+    summarize_folder(inp)
 else:
-    examine_path(inp)
+    summarize_path(inp)
