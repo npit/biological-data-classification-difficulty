@@ -32,7 +32,7 @@ def gather_and_save_all_accuracies(df, params, classifiers, num_folds, results, 
         time_start = time.time()
         for fold_index, (train_index, val_index) in enumerate(splitter.split(df.values, df.values[:, -1])):
             # make an ID for recoverable progress
-            current_id = f"{classifier_name}_fold{fold_index}_repr{representation}_ifrac{instance_frac}_ffrac{feature_frac}"
+            current_id = f"{classifier_name}_fold{fold_index}_repr{representation}_{filename}_ifrac{instance_frac}_ffrac{feature_frac}"
             if current_id in results["exp_id"].values.tolist():
                 print(f"Skipping experiment: {current_id} as it's already completed.")
                 # accuracy = results[results["exp_id"]==current_id]["accuracy"]
