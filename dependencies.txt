@@ -1,3 +1,5 @@
+keras
+tensorflow
 liac-arff
 pymfe
 info_gain
