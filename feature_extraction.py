@@ -91,8 +91,9 @@ def main():
 
     # formatting args
     ##################
-    if args.only_rep is not None and type(args.only_rep) != list:
-        args.only_rep = [args.only_rep]
+    if args.only_rep is not None:
+        if type(args.only_rep) == str:
+            args.only_rep = args.only_rep.split()
     if type(args.classifiers) == str:
         args.classifiers = args.classifiers.split()
     if type(args.instance_frac) == str:
@@ -216,11 +217,7 @@ def main():
                     del df
             # dataset file completed
 
-    #ski-learn-imputation
-    #+1 nn mikro 
-    #+1 decision tree-done
-    #plires run -done
-    #datasets me (2-100) classes
+    print("Run completed successfully")
 
 if __name__ == "__main__":
     main()
