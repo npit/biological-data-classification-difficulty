@@ -72,6 +72,7 @@ def main():
     parser.add_argument("-instance_frac", help="Fractions of instances to consider", default=[1.0])
     parser.add_argument("-feature_frac", help="Fractions of features to consider", default=[1.0])
     parser.add_argument("-classifiers", help="Classifiers to use", default="NN KNN SVM LR DT".split())
+    parser.add_argument("-results_filename", help="Filename to write results in", default="results.csv")
 
     args = parser.parse_args()
 
@@ -87,7 +88,6 @@ def main():
     avail_classifiers = {"NN": NN, "KNN": KNN, "SVM": SVM, "LR": logistic_regression, "DT": decision_tree}
     min_num_features = 100
     num_folds = 3
-    results_path_file = "results.csv"
 
     # formatting args
     ##################
@@ -97,9 +97,9 @@ def main():
     if type(args.classifiers) == str:
         args.classifiers = args.classifiers.split()
     if type(args.instance_frac) == str:
-        args.instance_frac = args.instance_frac.split()
+        args.instance_frac = [float(x) for x in args.instance_frac.split()]
     if type(args.feature_frac) == str:
-        args.feature_frac = args.feature_frac.split()
+        args.feature_frac = [float(x) for x in args.feature_frac.split()]
 
     # experiment parameters
     # #####################
@@ -107,19 +107,20 @@ def main():
     only_run_reprs = args.only_rep  # repr. names here to limit run to these represenations
     instance_fractions = args.instance_frac
     feature_fractions = args.feature_frac
+    results_filename = args.results_filename
     # ####################
 
     # input data
     if get_input_data_from_drive:
         base_google_drive_path =  "/content/drive/My Drive/"
         run_data_folder = base_google_drive_path + folder_with_representations_data
-        results_path = base_google_drive_path + "/" + folder_with_representations_data +  "/" + results_path_file 
+        results_path = base_google_drive_path + "/" + folder_with_representations_data +  "/" + results_filename
         if not os.path.exists(run_data_folder):
             from google.colab import drive
             drive.mount('/content/drive')
     else:
         run_data_folder = folder_with_representations_data
-        results_path = run_data_folder + "/" + results_path_file
+        results_path = run_data_folder + "/" + results_filename
         if not os.path.exists(run_data_folder):
             print("Can't find represenations folder:", run_data_folder)
             exit()
@@ -191,7 +192,7 @@ def main():
                 # print(f"Data fractioned by {instance_frac} instances:", instance_fractioned_df.values.shape)
 
                 # for each fraction of features
-                for feature_frac in instance_fractions:
+                for feature_frac in feature_fractions:
                     subset_size = round(feature_frac * len(full_features))
                     # select a different random percentage of features 
                     features_subset = random.sample(full_features, subset_size)
