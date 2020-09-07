@@ -136,7 +136,7 @@ def main():
         print("Creating brand-new results:", results_path)
         results = pd.DataFrame(columns="exp_id representation filename inst_frac feat_frac classifier fold accuracy".split() + METAFEATURES_COLUMNS)
         try:
-            results.to_csv(results_path)
+            results.to_csv(results_path, index=None)
         except:
             print("Can't make the results file path:", run_data_folder)
             exit()
